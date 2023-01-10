@@ -1,4 +1,12 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from "aws-lambda";
+import { ProductRepository } from "/opt/nodejs/productsLayer";
+import { DynamoDB } from "aws-sdk";
+
+// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+const productsDynamodb = process.env.PRODUCTS_DYNAMODB!;
+const dynamoClient = new DynamoDB.DocumentClient();
+
+const productRepository = new ProductRepository(dynamoClient, productsDynamodb);
 
 export async function handler(
   event: APIGatewayProxyEvent,
@@ -13,20 +21,32 @@ export async function handler(
   const method = event.httpMethod;
   if (event.resource === "/products") {
     if (method === "GET") {
+
+      const products = await productRepository.getAllProducts();
+
       return {
-        body: JSON.stringify({ message: "Top!" }),
         statusCode: 200,
+        body: JSON.stringify(products),
       };
     }
   }
   else if (event.resource === "/products/{id}") {
     const id = event.pathParameters?.id as string;
-    console.log(`GET /products/${id}`);
+    try {
+      const product = await productRepository.getProductById(id);
 
-    return {
-      statusCode: 200,
-      body: JSON.stringify({ message: `GET /products/${id}` }),
-    };
+      return {
+        statusCode: 200,
+        body: JSON.stringify(product),
+      };
+    }
+    catch (error) {
+      console.error((<Error>error).message);
+      return {
+        statusCode: 404,
+        body: (<Error>error).message,
+      };
+    }
   }
 
   return {

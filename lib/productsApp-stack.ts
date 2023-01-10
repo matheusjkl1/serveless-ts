@@ -33,7 +33,6 @@ export class ProductsAppStack extends cdk.Stack {
     this.productsFetchHandler = new lambdaNodeJS.NodejsFunction(
       this,
       "ProductsFetchFunction",
-
       {
         functionName: "ProductsFetchFunction",
         entry: "lambda/products/productsFetchFuncion.ts",

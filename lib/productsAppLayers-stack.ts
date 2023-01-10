@@ -17,7 +17,7 @@ export class ProductsAppLayersStack extends cdk.Stack {
     });
 
     new ssm.StringParameter(this, "ProductsLayerVersionArn", {
-      parameterName: "ProductsLAyerVersionArn",
+      parameterName: "ProductsLayerVersionArn",
       stringValue: this.productLayers.layerVersionArn,
     });
   }

@@ -1,6 +1,10 @@
 import { DocumentClient } from "aws-sdk/clients/dynamodb";
 import * as crypto from "crypto";
 
+const secret = "abcdefg";
+const hash = crypto.createHmac("sha256", secret)
+  .digest("hex");
+
 export interface Product {
   id: string,
   productName: string;
@@ -28,11 +32,11 @@ export class ProductRepository {
     return data.Items as Product [];
   }
 
-  async getProductById(prdocutId: string): Promise<Product> {
+  async getProductById(productId: string): Promise<Product> {
     const data = await this.dynamoClient.get({
       TableName: this.productsDynamo,
       Key: {
-        id: prdocutId,
+        id: productId,
       },
     }).promise();
 
@@ -45,17 +49,54 @@ export class ProductRepository {
   }
 
   async create(product: Product): Promise<Product> {
-    const secret = "abcdefg";
-    const hash = crypto.createHmac("sha256", secret)
-      .update("I love cupcakes")
-      .digest("hex");
     product.id = hash;
 
-    this.dynamoClient.put({
+    await this.dynamoClient.put({
       TableName: this.productsDynamo,
       Item: product,
     }).promise();
 
     return product;
+  }
+
+  async deleteProduct(productId: string): Promise<Product> {
+    const data = await this.dynamoClient.delete({
+      TableName: this.productsDynamo,
+      Key: {
+        id: productId,
+      },
+      ReturnValues: "ALL_OLD",
+    }).promise();
+
+    if (data.Attributes) {
+      return data.Attributes as Product;
+    }
+    else {
+      throw new Error("Product not found");
+    }
+  }
+
+  async updateProduct(productId: string, product: Product) {
+    const data = await this.dynamoClient.update({
+      TableName: this.productsDynamo,
+      Key: {
+        id: productId,
+      },
+      ConditionExpression: "attribute_exists(id)",
+      ReturnValues: "UPDATED_NEW",
+      UpdateExpression: "set productName = :n, code = :c, price = :p, model= :m",
+      ExpressionAttributeValues: {
+        ":n": product.productName,
+        ":c": product.code,
+        ":p": product.price,
+        ":m": product.model,
+      },
+    }).promise();
+
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    data.Attributes!.id = productId;
+
+    return data.Attributes as Product;
+
   }
 }
