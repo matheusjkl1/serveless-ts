@@ -46,6 +46,7 @@ export class ProductsAppStack extends cdk.Stack {
         environment: {
           PRODUCTS_DYNAMODB: this.productsDynamoDb.tableName,
         },
+        tracing: lambda.Tracing.ACTIVE,
         layers: [productsLayers],
       }
     );
@@ -67,6 +68,7 @@ export class ProductsAppStack extends cdk.Stack {
         environment: {
           PRODUCTS_DYNAMODB: this.productsDynamoDb.tableName,
         },
+        tracing: lambda.Tracing.ACTIVE,
         layers: [productsLayers],
       }
     );

@@ -2,6 +2,10 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from "aws-lambda";
 import { Product, ProductRepository } from "/opt/nodejs/productsLayer";
 import { DynamoDB } from "aws-sdk";
+import * as AWSXRay from "aws-xray-sdk";
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+AWSXRay.captureAWS(require("aws-sdk"));
 
 const productsDynamodb = process.env.PRODUCTS_DYNAMODB!;
 const dynamoClient = new DynamoDB.DocumentClient();
@@ -46,8 +50,8 @@ export async function handler(
       }
     }
     if (method === "DELETE") {
-      const product = await productRepository.deleteProduct(id);
       try {
+        const product = await productRepository.deleteProduct(id);
         return {
           statusCode: 204,
           body: JSON.stringify(product),

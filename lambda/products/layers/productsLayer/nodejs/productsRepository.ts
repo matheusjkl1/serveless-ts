@@ -1,9 +1,5 @@
 import { DocumentClient } from "aws-sdk/clients/dynamodb";
-import * as crypto from "crypto";
-
-const secret = "abcdefg";
-const hash = crypto.createHmac("sha256", secret)
-  .digest("hex");
+import { randomUUID } from "crypto";
 
 export interface Product {
   id: string,
@@ -11,6 +7,7 @@ export interface Product {
   code: string;
   price: number;
   model: string;
+  productUrl: string;
 }
 
 export class ProductRepository {
@@ -49,7 +46,7 @@ export class ProductRepository {
   }
 
   async create(product: Product): Promise<Product> {
-    product.id = hash;
+    product.id = randomUUID();
 
     await this.dynamoClient.put({
       TableName: this.productsDynamo,
@@ -84,12 +81,13 @@ export class ProductRepository {
       },
       ConditionExpression: "attribute_exists(id)",
       ReturnValues: "UPDATED_NEW",
-      UpdateExpression: "set productName = :n, code = :c, price = :p, model= :m",
+      UpdateExpression: "set productName = :n, code = :c, price = :p, model= :m, productUrl = :u",
       ExpressionAttributeValues: {
         ":n": product.productName,
         ":c": product.code,
         ":p": product.price,
         ":m": product.model,
+        ":u": product.productUrl,
       },
     }).promise();
 

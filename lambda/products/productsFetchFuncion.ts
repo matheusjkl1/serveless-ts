@@ -1,6 +1,10 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from "aws-lambda";
 import { ProductRepository } from "/opt/nodejs/productsLayer";
 import { DynamoDB } from "aws-sdk";
+import * as AWSXRay from "aws-xray-sdk";
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+AWSXRay.captureAWS(require("aws-sdk"));
 
 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 const productsDynamodb = process.env.PRODUCTS_DYNAMODB!;
