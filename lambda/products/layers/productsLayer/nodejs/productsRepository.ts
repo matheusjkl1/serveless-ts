@@ -45,6 +45,27 @@ export class ProductRepository {
     }
   }
 
+  async getProductsByIds(productsIds: string[]): Promise<Product[]> {
+    const keys: { id: string; }[] = [];
+
+    productsIds.forEach((productsId) => {
+      keys.push({
+        id: productsId,
+      });
+    });
+
+    const data = await this.dynamoClient.batchGet({
+      RequestItems: {
+        [this.productsDynamo]: {
+          Keys: keys,
+        },
+      },
+    }).promise();
+
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    return data.Responses![this.productsDynamo] as Product[];
+  }
+
   async create(product: Product): Promise<Product> {
     product.id = randomUUID();
 
