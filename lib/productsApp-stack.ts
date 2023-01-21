@@ -35,7 +35,7 @@ export class ProductsAppStack extends cdk.Stack {
     const productsLayers = lambda.LayerVersion.fromLayerVersionArn(this, "ProductsLayerVersionArn", productsLayersArn);
 
     const productEventsLayersArn = ssm.StringParameter.valueForStringParameter(this, "ProductEventsLayerVersionArn");
-    const productEvenstLayers = lambda.LayerVersion.fromLayerVersionArn(this, "ProductEventsLayerVersionArn", productEventsLayersArn);
+    const productEventsLayers = lambda.LayerVersion.fromLayerVersionArn(this, "ProductEventsLayerVersionArn", productEventsLayersArn);
 
     const productsEventsHandler = new lambdaNodeJS.NodejsFunction(
       this,
@@ -54,7 +54,7 @@ export class ProductsAppStack extends cdk.Stack {
           EVENTS_DYNAMODB: props.eventsDynamo.tableName,
         },
         tracing: lambda.Tracing.ACTIVE,
-        layers: [productsLayers, productEvenstLayers],
+        layers: [productEventsLayers],
         insightsVersion: lambda.LambdaInsightsVersion.VERSION_1_0_119_0,
       }
     );
@@ -101,7 +101,7 @@ export class ProductsAppStack extends cdk.Stack {
           PRODUCTS_EVENTS_FUNCTION_NAME: productsEventsHandler.functionName,
         },
         tracing: lambda.Tracing.ACTIVE,
-        layers: [productsLayers, productEvenstLayers],
+        layers: [productsLayers, productEventsLayers],
         insightsVersion: lambda.LambdaInsightsVersion.VERSION_1_0_119_0,
       }
     );

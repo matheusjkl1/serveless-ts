@@ -4,16 +4,16 @@ import { DynamoDB } from "aws-sdk";
 import * as AWSXRAY from "aws-xray-sdk";
 
 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-const eventsDynamo = process.env.PRODUCTS_DYNAMODB!;
+const eventsDynamo = process.env.EVENTS_DYNAMODB!;
 const dynamobClient = new DynamoDB.DocumentClient();
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 AWSXRAY.captureAWS(require("aws-sdk"));
 
-async function createEvent(event:ProductEvent) {
+function createEvent(event:ProductEvent) {
   const timestamp = Date.now();
   const ttl = ~~(timestamp / 1000) + 5 * 60;
 
-  dynamobClient.put({
+  return dynamobClient.put({
     TableName: eventsDynamo,
     Item: {
       pk: `#product_${event.productCode}`,
@@ -28,7 +28,7 @@ async function createEvent(event:ProductEvent) {
       },
       ttl: ttl,
     },
-  });
+  }).promise();
 }
 
 export async function handler(event: ProductEvent, context: Context, callback: Callback): Promise<void> {

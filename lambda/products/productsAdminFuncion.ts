@@ -11,7 +11,7 @@ AWSXRay.captureAWS(require("aws-sdk"));
 const productsDynamodb = process.env.PRODUCTS_DYNAMODB!;
 const dynamoClient = new DynamoDB.DocumentClient();
 
-const productEventFunctionName = process.env.PRODUCTS_EVENTS_FUNCTION_NAME!;
+const productsEventsFunctionName = process.env.PRODUCTS_EVENTS_FUNCTION_NAME!;
 const lambdaClient = new Lambda();
 
 const productRepository = new ProductRepository(dynamoClient, productsDynamodb);
@@ -26,11 +26,11 @@ async function sendProductEvent(product: Product, eventType: ProductEventType, e
     requestId: lambdaRequestId,
   };
 
-  lambdaClient.invoke({
-    FunctionName: productEventFunctionName,
+  return lambdaClient.invoke({
+    FunctionName: productsEventsFunctionName,
     Payload: JSON.stringify(event),
-    InvocationType: "RequestResponse",
-  });
+    InvocationType: "Event",
+  }).promise();
 }
 
 export async function handler(
