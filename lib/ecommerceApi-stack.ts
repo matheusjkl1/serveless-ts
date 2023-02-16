@@ -59,7 +59,44 @@ export class ECommerceApiStack extends cdk.Stack {
       requestValidator: orderDeletionValidator,
     });
 
-    ordersResource.addMethod("POST", ordersIntegration);
+    const orderRequestValidator = new apigateway.RequestValidator(this, "OrderRequestValidator", {
+      restApi: api,
+      requestValidatorName: "Order request validator",
+      validateRequestBody: true,
+    });
+    const orderModel = new apigateway.Model(this, "OrderModel", {
+      restApi: api,
+      schema: {
+        type: apigateway.JsonSchemaType.OBJECT,
+        properties: {
+          email: {
+            type: apigateway.JsonSchemaType.STRING,
+          },
+          productIds: {
+            type: apigateway.JsonSchemaType.ARRAY,
+            minItems: 1,
+            items: {
+              type: apigateway.JsonSchemaType.STRING,
+            },
+          },
+          payment: {
+            type: apigateway.JsonSchemaType.STRING,
+            enum: ["CASH", "DEBIT_CARD", "CREDIT_CARD"],
+          },
+        },
+        required: [
+          "email",
+          "productIds",
+          "payment",
+        ],
+      },
+    });
+    ordersResource.addMethod("POST", ordersIntegration, {
+      requestValidator: orderRequestValidator,
+      requestModels: {
+        "application/json": orderModel,
+      },
+    });
   }
 
   private createProductsService(props: ECommerceApiStackProps, api: apigateway.RestApi) {
@@ -73,9 +110,54 @@ export class ECommerceApiStack extends cdk.Stack {
 
     const productsAdminIntegration = new apigateway.LambdaIntegration(props.productsAdminHandler);
 
-    productsResource.addMethod("POST", productsAdminIntegration);
+    const productRequestValidator = new apigateway.RequestValidator(this, "ProductRequestValidator", {
+      restApi: api,
+      requestValidatorName: "Product request validator",
+      validateRequestBody: true,
+    });
 
-    productIdResource.addMethod("PUT", productsAdminIntegration);
+    const productModel = new apigateway.Model(this, "ProductModel", {
+      restApi: api,
+      contentType: "application/json",
+      schema: {
+        type: apigateway.JsonSchemaType.OBJECT,
+        properties: {
+          productName: {
+            type: apigateway.JsonSchemaType.STRING,
+          },
+          code: {
+            type: apigateway.JsonSchemaType.STRING,
+          },
+          price: {
+            type: apigateway.JsonSchemaType.NUMBER,
+          },
+          model: {
+            type: apigateway.JsonSchemaType.STRING,
+          },
+          productUrl: {
+            type: apigateway.JsonSchemaType.STRING,
+          },
+        },
+        required: [
+          "productName",
+          "code",
+        ],
+      },
+    });
+
+    productsResource.addMethod("POST", productsAdminIntegration, {
+      requestValidator: productRequestValidator,
+      requestModels: {
+        "application/json": productModel,
+      },
+    });
+
+    productIdResource.addMethod("PUT", productsAdminIntegration, {
+      requestValidator: productRequestValidator,
+      requestModels: {
+        "application/json": productModel,
+      },
+    });
 
     productIdResource.addMethod("DELETE", productsAdminIntegration);
   }
